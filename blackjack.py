@@ -59,7 +59,7 @@ class Player:
     
     def stand(self):
         """ Conserver ses cartes """
-        pass
+        print("Stand", hand_result(self.hand))
 
     def hit(self):
         """ Tirer une carte """
@@ -78,14 +78,17 @@ class Croupier(Player):
         super().__init__(deck, balance)
 
     def service(self):
-        while hand_result(self.hand) <= 16:
-            self.hit
-        else:
-            self.stand
-
+        self.show_hand()
+        while hand_result(self.hand) < 17:
+            self.hit()
+            self.show_hand()
+            if hand_result(self.hand) > 21:
+                print("Le croupier bust")
+                break
+            
     def show_hand_start(self):
         if len(self.hand) == 1:
-            print(f"Main du Croupier: {self.hand[0]} \n Résultat: {hand_result(self.hand[0])}")
+            print(f"Main du Croupier: {self.hand} \n Résultat: {hand_result(self.hand[0])}")
         else:
             print(f"Main du Croupier: {self.hand[0]} + ? \n Résultat: {hand_result(self.hand[0])} + ?")
         
@@ -98,25 +101,52 @@ class Game:
     def distribution(self):
         for _ in range(2):
             for player in self.players:
-                sleep(2)
+                #sleep(2)
                 player.hit()
                 if isinstance(player, Croupier):
                     player.show_hand_start()
                 else:
                     player.show_hand()
-        
 
-        
+    def players_decisions(self):
+        for player in self.players:
+            if not isinstance(player, Croupier):
+                while hand_result(player.hand) <= 21:
+                    if hand_result(player.hand) == 21:
+                        print("Blackjack")
+                        break
+                    player_input = input("Choose 'stand' or 'hit' ?   ")
+                    #sleep(2)
+                    if player_input == "stand":
+                        player.stand()
+                        break
+                    elif player_input in "hit":
+                        player.hit()
+                        player.show_hand()
+                        if hand_result(player.hand) > 21:
+                            print("Bust! Vous avez perdu.")
+                            break
+        self.croupier_decisions()
+
+    def croupier_decisions(self):
+        for player in players_list:
+            if isinstance(player, Croupier):
+                player.service()
+
+
+
     
 players_list = []
 
 deck = Deck()
 
 
+
 Joueur1 = Player(deck)
 Crp = Croupier(deck)
-print(f"La liste des joueurs est: {players_list}")
+
 
 
 partie = Game(players_list, deck)
 partie.distribution()
+partie.players_decisions()
